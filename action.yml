@@ -1,0 +1,33 @@
+name: StandGuard Pre-Flight
+description: >-
+  Lint your HIL test-bench config before it reaches hardware. 20 checks across
+  pins, interlocks, timing, and stimulus. Exit code 1 = do not apply power.
+author: HanchoPOW
+branding:
+  icon: shield
+  color: orange
+inputs:
+  config:
+    description: Path to the bench configuration JSON file
+    required: false
+    default: bench.json
+  strict:
+    description: Treat warnings as errors
+    required: false
+    default: "false"
+  version-url:
+    description: Override URL for the standguard linter (air-gapped mirrors)
+    required: false
+    default: https://standguard.dev/dist/standguard.py
+runs:
+  using: composite
+  steps:
+    - name: Fetch standguard linter
+      shell: bash
+      run: curl -fsSL "${{ inputs.version-url }}" -o /tmp/standguard.py
+    - name: Run pre-flight lint
+      shell: bash
+      run: |
+        ARGS="lint ${{ inputs.config }}"
+        if [ "${{ inputs.strict }}" = "true" ]; then ARGS="$ARGS --strict"; fi
+        python3 /tmp/standguard.py $ARGS
